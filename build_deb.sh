@@ -19,6 +19,7 @@ mkdir -p "$DEB_DIR/usr/bin"
 mkdir -p "$DEB_DIR/usr/share/applications"
 mkdir -p "$DEB_DIR/usr/lib/python3/dist-packages"
 mkdir -p "$DEB_DIR/usr/share/icons/hicolor/scalable/apps"
+python3 setup.py sdist bdist_wheel
 
 # 2. Create Control File
 cat > "$DEB_DIR/DEBIAN/control" << EOF

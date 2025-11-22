@@ -15,7 +15,7 @@ setup(
     description="A modern GTK4 desktop application for managing cron jobs on Linux",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/yourusername/cron_gui",
+    url="https://github.com/goal651/cron_gui",
     packages=find_packages(),
     classifiers=[
         "Development Status :: 3 - Alpha",
