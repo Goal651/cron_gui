@@ -6,7 +6,7 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Gtk, Adw, GLib
+from gi.repository import Gtk, Adw, GLib, Gio
 from cron_gui.job_list import JobListView
 from cron_gui.job_dialog import JobDialog
 from cron_gui.cron_manager import CronManager
@@ -51,7 +51,7 @@ class CronGuiWindow(Adw.ApplicationWindow):
         menu_button.set_tooltip_text("Main menu")
 
         # Create menu
-        menu = GLib.Menu()
+        menu = Gio.Menu()
         menu.append("About", "app.about")
         menu_button.set_menu_model(menu)
 
