@@ -4,6 +4,12 @@ Cron GUI - Main entry point for the application.
 """
 
 import sys
+import os
+
+# Add src to path for local execution
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
+
+import signal
 import gi
 
 gi.require_version("Gtk", "4.0")

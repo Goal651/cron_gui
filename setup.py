@@ -16,7 +16,8 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/goal651/cron_gui",
-    packages=find_packages(),
+    package_dir={"": "src"},
+    packages=find_packages(where="src", exclude=["*__pycache__*"]),
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: System Administrators",

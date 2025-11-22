@@ -93,8 +93,31 @@ class JobDialog(Gtk.Dialog):
         content.append(manual_label)
         content.append(self.schedule_entry)
 
+        # Time Selection
+        time_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        time_box.set_margin_top(12)
+
+        self.specific_time_check = Gtk.CheckButton(label="Run at specific time")
+        self.specific_time_check.connect("toggled", self._on_time_check_toggled)
+
+        self.hour_spin = Gtk.SpinButton.new_with_range(0, 23, 1)
+        self.hour_spin.set_sensitive(False)
+        self.hour_spin.connect("value-changed", self._on_time_spin_changed)
+
+        self.minute_spin = Gtk.SpinButton.new_with_range(0, 59, 1)
+        self.minute_spin.set_sensitive(False)
+        self.minute_spin.connect("value-changed", self._on_time_spin_changed)
+
+        time_box.append(self.specific_time_check)
+        time_box.append(Gtk.Label(label="  "))
+        time_box.append(self.hour_spin)
+        time_box.append(Gtk.Label(label=":"))
+        time_box.append(self.minute_spin)
+
+        content.append(time_box)
+
         # Schedule builder grid
-        builder_label = Gtk.Label(label="Schedule builder:")
+        builder_label = Gtk.Label(label="Advanced builder:")
         builder_label.set_xalign(0)
         builder_label.set_margin_top(12)
         content.append(builder_label)
@@ -191,6 +214,41 @@ class JobDialog(Gtk.Dialog):
             self.day_entry.set_text(parts[2])
             self.month_entry.set_text(parts[3])
             self.weekday_entry.set_text(parts[4])
+
+            # Check if it's a specific time
+            try:
+                m = int(parts[0])
+                h = int(parts[1])
+                self.specific_time_check.set_active(True)
+                self.minute_spin.set_value(m)
+                self.hour_spin.set_value(h)
+            except ValueError:
+                self.specific_time_check.set_active(False)
+
+    def _on_time_check_toggled(self, button):
+        """Handle time check toggle."""
+        is_specific = button.get_active()
+        self.hour_spin.set_sensitive(is_specific)
+        self.minute_spin.set_sensitive(is_specific)
+        self.minute_entry.set_sensitive(not is_specific)
+        self.hour_entry.set_sensitive(not is_specific)
+
+        if is_specific:
+            self._on_time_spin_changed(None)
+        else:
+            # Only reset if they were previously specific values,
+            # but to be safe and clear, let's reset to * if switching back to advanced
+            # unless the user just unchecked it to edit the existing value.
+            # Actually, better to leave the text as is, so they can edit it.
+            pass
+
+    def _on_time_spin_changed(self, widget):
+        """Handle time spin changes."""
+        if self.specific_time_check.get_active():
+            h = int(self.hour_spin.get_value())
+            m = int(self.minute_spin.get_value())
+            self.hour_entry.set_text(str(h))
+            self.minute_entry.set_text(str(m))
 
     def _on_builder_changed(self, entry):
         """Handle builder field changes."""
