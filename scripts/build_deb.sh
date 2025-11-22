@@ -3,6 +3,10 @@
 # Exit on error
 set -e
 
+# Resolve project root (assuming script is in scripts/ directory)
+PROJECT_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
+cd "$PROJECT_ROOT"
+
 APP_NAME="cron-gui"
 VERSION="0.1.0"
 ARCH="all"
