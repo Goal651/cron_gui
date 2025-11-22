@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Cron GUI
+Comment=Manage cron jobs with a modern graphical interface
+Icon=preferences-system-time
+Exec=python3 /home/hacker/Documents/GITHUB/PROJECTS/SYS_ADMIN/cron_gui/main.py
+Terminal=false
+Categories=System;Settings;
+Keywords=cron;schedule;task;automation;
+StartupNotify=true
