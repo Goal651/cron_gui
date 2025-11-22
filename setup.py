@@ -36,6 +36,10 @@ setup(
         "python-crontab>=3.0.0",
         "croniter>=1.4.1",
     ],
+    include_package_data=True,
+    package_data={
+        "cron_gui": ["../assets/*"],
+    },
     entry_points={
         "console_scripts": [
             "cron-gui=main:main",
