@@ -49,14 +49,14 @@ class CronGuiApplication(Adw.Application):
         about = Adw.AboutWindow(
             transient_for=self.props.active_window,
             application_name="Cron GUI",
-            application_icon="com.github.cron_gui",
-            developer_name="Cron GUI Team",
+            application_icon="cron_gui.svg",
+            developer_name="Wilson Goal",
             version="0.1.0",
-            developers=["Cron GUI Team"],
-            copyright="© 2025 Cron GUI Team",
+            developers=["Wilson Goal"],
+            copyright="© 2025 Wilson Goal",
             license_type=Gtk.License.MIT_X11,
-            website="https://github.com/yourusername/cron_gui",
-            issue_url="https://github.com/yourusername/cron_gui/issues",
+            website="https://github.com/goal651/cron_gui",
+            issue_url="https://github.com/goal651/cron_gui/issues",
         )
         about.present()
 

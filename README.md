@@ -158,6 +158,65 @@ Here are some powerful ways to use Cron GUI:
 - **Downloads:** Schedule heavy downloads for off-peak hours (e.g., 2 AM)
 - **Wallpaper Switcher:** Change your desktop wallpaper every hour
 
+## Building and Distribution
+
+### Building the Package
+
+To build a distributable Python package (wheel and source distribution):
+
+1. **Install build tools:**
+
+    ```bash
+    pip install build
+    ```
+
+2. **Build the package:**
+
+    ```bash
+    python3 -m build
+    ```
+
+    Or using setup.py directly (legacy):
+
+    ```bash
+    python3 setup.py sdist bdist_wheel
+    ```
+
+3. **Artifacts:**
+    The built packages will be in the `dist/` directory:
+    - `cron_gui-0.1.0-py3-none-any.whl` (Wheel)
+    - `cron_gui-0.1.0.tar.gz` (Source tarball)
+
+### Installing from Build
+
+You can install the built package using pip:
+
+```bash
+pip install dist/cron_gui-0.1.0-py3-none-any.whl
+```
+
+This will install the `cron-gui` command globally (or in your active environment).
+
+### Creating a Debian Package (.deb)
+
+To create a native Debian package for easy installation on Ubuntu/Debian/Kali:
+
+1. **Run the build script:**
+
+    ```bash
+    ./build_deb.sh
+    ```
+
+2. **Install the package:**
+
+    ```bash
+    sudo dpkg -i dist/cron-gui_0.1.0_all.deb
+    sudo apt-get install -f  # Install dependencies if needed
+    ```
+
+3. **Run:**
+    You can now launch "Cron GUI" from your system menu!
+
 ## Development
 
 ### Project Structure
