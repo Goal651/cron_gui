@@ -6,7 +6,7 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Gtk, Adw, GLib, Gio
+from gi.repository import Gtk, Adw, GLib, Gio, GObject
 from cron_gui.job_list import JobListView
 from cron_gui.job_dialog import JobDialog
 from cron_gui.cron_manager import CronManager
@@ -75,7 +75,7 @@ class CronGuiWindow(Adw.ApplicationWindow):
             "search-mode-enabled",
             self.search_button,
             "active",
-            GLib.BindingFlags.BIDIRECTIONAL,
+            GObject.BindingFlags.BIDIRECTIONAL,
         )
         header.pack_end(self.search_button)
 

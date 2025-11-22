@@ -132,6 +132,32 @@ Cron expressions consist of 5 fields:
 - `*/5 * * * *` - Every 5 minutes
 - `0 */2 * * *` - Every 2 hours
 
+## What Can You Do With Cron Jobs?
+
+Here are some powerful ways to use Cron GUI:
+
+### 🚀 System Maintenance
+
+- **Backups:** Automatically zip and move files to a backup drive every night
+  - `0 3 * * * /scripts/backup.sh`
+- **Cleanup:** Delete temporary files older than 7 days
+  - `0 4 * * * find /tmp -mtime +7 -delete`
+- **Log Rotation:** Archive and clear log files to save space
+
+### 🌐 Web & Development
+
+- **Status Checks:** Ping your website every 5 minutes
+  - `*/5 * * * * curl -s https://mysite.com > /dev/null`
+- **Data Fetching:** Run a script to scrape a website or fetch API data every hour
+- **Certificate Renewal:** Auto-renew SSL certificates
+
+### 🏠 Personal Automation
+
+- **Reminders:** Send yourself a desktop notification
+  - `0 9 * * 1 notify-send "Weekly Meeting"`
+- **Downloads:** Schedule heavy downloads for off-peak hours (e.g., 2 AM)
+- **Wallpaper Switcher:** Change your desktop wallpaper every hour
+
 ## Development
 
 ### Project Structure
@@ -154,7 +180,7 @@ cron_gui/
 
 ### Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 ## Troubleshooting
 
