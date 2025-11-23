@@ -20,75 +20,126 @@ class JobDialog(Gtk.Dialog):
 
     def __init__(self, parent, job: Optional[Dict] = None):
         super().__init__(
-            title="Edit Job" if job else "Add Job", transient_for=parent, modal=True
+            title="✨ Edit Job" if job else "✨ Add New Job",
+            transient_for=parent,
+            modal=True,
         )
 
         self.job = job
-        self.set_default_size(500, 500)
+        self.set_default_size(550, 600)
+        self.set_resizable(True)
 
-        # Add buttons
-        self.add_button("Cancel", Gtk.ResponseType.CANCEL)
+        # Add buttons with better styling
+        cancel_btn = self.add_button("Cancel", Gtk.ResponseType.CANCEL)
         save_button = self.add_button("Save", Gtk.ResponseType.OK)
         save_button.add_css_class("suggested-action")
 
-        # Content area
+        # Main content area with scrolling support
         content = self.get_content_area()
-        content.set_spacing(12)
-        content.set_margin_start(12)
-        content.set_margin_end(12)
-        content.set_margin_top(12)
-        content.set_margin_bottom(12)
+        content.set_spacing(18)  # Increased spacing between sections
+        content.set_margin_start(24)
+        content.set_margin_end(24)
+        content.set_margin_top(18)
+        content.set_margin_bottom(18)
 
-        # Command entry
-        command_label = Gtk.Label(label="Command:")
+        # ==== COMMAND SECTION ====
+        command_label = Gtk.Label(label="Command")
         command_label.set_xalign(0)
-        command_label.add_css_class("heading")
+        command_label.add_css_class("title-4")
+        command_label.set_margin_bottom(6)
 
         self.command_entry = Gtk.Entry()
         self.command_entry.set_placeholder_text("e.g., /usr/bin/backup.sh")
+        self.command_entry.set_tooltip_text(
+            "Enter the full path to the command or script to execute"
+        )
         if job:
             self.command_entry.set_text(job["command"])
 
         content.append(command_label)
         content.append(self.command_entry)
 
-        # ==== Simple scheduling UI ====
-        schedule_label = Gtk.Label(label="Schedule:")
+        # Separator
+        separator1 = Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL)
+        separator1.set_margin_top(12)
+        separator1.set_margin_bottom(6)
+        content.append(separator1)
+
+        # ==== SCHEDULE SECTION ====
+        schedule_label = Gtk.Label(label="Schedule")
         schedule_label.set_xalign(0)
-        schedule_label.add_css_class("heading")
-        schedule_label.set_margin_top(12)
+        schedule_label.add_css_class("title-4")
+        schedule_label.set_margin_bottom(12)
         content.append(schedule_label)
 
-        # Recurrence selector
-        recurrence_label = Gtk.Label(label="Recurrence:")
+        # Recurrence selector with better layout
+        recurrence_label = Gtk.Label(label="Recurrence")
         recurrence_label.set_xalign(0)
+        recurrence_label.add_css_class("dim-label")
+        recurrence_label.set_margin_bottom(6)
+
         self.recurrence_combo = Gtk.ComboBoxText()
         for label in ["Daily", "Weekly", "Monthly", "Yearly", "Once"]:
             self.recurrence_combo.append_text(label)
         self.recurrence_combo.set_active(0)  # default to Daily
         self.recurrence_combo.connect("changed", self._on_simple_changed)
+        self.recurrence_combo.set_tooltip_text("How often should this job run?")
+
         content.append(recurrence_label)
         content.append(self.recurrence_combo)
 
-        # Time selection (always visible)
-        time_label = Gtk.Label(label="Time:")
+        # Time selection with improved layout
+        time_label = Gtk.Label(label="Time")
         time_label.set_xalign(0)
-        simple_time_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        time_label.add_css_class("dim-label")
+        time_label.set_margin_top(12)
+        time_label.set_margin_bottom(6)
+
+        simple_time_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+
+        # Hour spinner
+        hour_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        hour_label = Gtk.Label(label="Hour")
+        hour_label.add_css_class("caption")
+        hour_label.add_css_class("dim-label")
         self.simple_hour_spin = Gtk.SpinButton.new_with_range(0, 23, 1)
-        self.simple_minute_spin = Gtk.SpinButton.new_with_range(0, 59, 1)
         self.simple_hour_spin.set_value(0)
-        self.simple_minute_spin.set_value(0)
+        self.simple_hour_spin.set_width_chars(4)
         self.simple_hour_spin.connect("value-changed", self._on_simple_changed)
+        hour_box.append(hour_label)
+        hour_box.append(self.simple_hour_spin)
+
+        # Colon separator
+        colon_label = Gtk.Label(label=":")
+        colon_label.set_margin_top(18)
+        colon_label.add_css_class("title-2")
+
+        # Minute spinner
+        minute_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        minute_label = Gtk.Label(label="Minute")
+        minute_label.add_css_class("caption")
+        minute_label.add_css_class("dim-label")
+        self.simple_minute_spin = Gtk.SpinButton.new_with_range(0, 59, 1)
+        self.simple_minute_spin.set_value(0)
+        self.simple_minute_spin.set_width_chars(4)
         self.simple_minute_spin.connect("value-changed", self._on_simple_changed)
-        simple_time_box.append(self.simple_hour_spin)
-        simple_time_box.append(Gtk.Label(label=":"))
-        simple_time_box.append(self.simple_minute_spin)
+        minute_box.append(minute_label)
+        minute_box.append(self.simple_minute_spin)
+
+        simple_time_box.append(hour_box)
+        simple_time_box.append(colon_label)
+        simple_time_box.append(minute_box)
+
         content.append(time_label)
         content.append(simple_time_box)
 
         # Day of week selector (for Weekly)
-        self.weekday_label = Gtk.Label(label="Day of week:")
+        self.weekday_label = Gtk.Label(label="Day of Week")
         self.weekday_label.set_xalign(0)
+        self.weekday_label.add_css_class("dim-label")
+        self.weekday_label.set_margin_top(12)
+        self.weekday_label.set_margin_bottom(6)
+
         self.weekday_combo = Gtk.ComboBoxText()
         weekdays = [
             "Sunday",
@@ -101,41 +152,65 @@ class JobDialog(Gtk.Dialog):
         ]
         for day in weekdays:
             self.weekday_combo.append_text(day)
-        self.weekday_combo.set_active(0)  # default to Sunday
+        self.weekday_combo.set_active(0)
         self.weekday_combo.connect("changed", self._on_simple_changed)
+        self.weekday_combo.set_tooltip_text("Which day of the week?")
+
         content.append(self.weekday_label)
         content.append(self.weekday_combo)
 
         # Day of month selector (for Monthly)
-        self.monthday_label = Gtk.Label(label="Day of month:")
+        self.monthday_label = Gtk.Label(label="Day of Month")
         self.monthday_label.set_xalign(0)
+        self.monthday_label.add_css_class("dim-label")
+        self.monthday_label.set_margin_top(12)
+        self.monthday_label.set_margin_bottom(6)
+
         self.monthday_spin = Gtk.SpinButton.new_with_range(1, 31, 1)
         self.monthday_spin.set_value(1)
+        self.monthday_spin.set_width_chars(4)
         self.monthday_spin.connect("value-changed", self._on_simple_changed)
+        self.monthday_spin.set_tooltip_text("Which day of the month? (1-31)")
+
         content.append(self.monthday_label)
         content.append(self.monthday_spin)
 
         # Calendar widget (for Once and Yearly)
-        self.calendar_label = Gtk.Label(label="Date:")
+        self.calendar_label = Gtk.Label(label="Date")
         self.calendar_label.set_xalign(0)
+        self.calendar_label.add_css_class("dim-label")
+        self.calendar_label.set_margin_top(12)
+        self.calendar_label.set_margin_bottom(6)
+
         self.calendar = Gtk.Calendar()
         self.calendar.connect("day-selected", self._on_simple_changed)
+        self.calendar.set_tooltip_text("Select the specific date")
+
         content.append(self.calendar_label)
         content.append(self.calendar)
 
-        # Advanced options section (hidden by default)
-        self.show_advanced_check = Gtk.CheckButton(label="Show advanced options")
+        # Separator before advanced options
+        separator2 = Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL)
+        separator2.set_margin_top(18)
+        separator2.set_margin_bottom(12)
+        content.append(separator2)
+
+        # Advanced options toggle
+        self.show_advanced_check = Gtk.CheckButton(label="⚙️ Show Advanced Options")
         self.show_advanced_check.connect("toggled", self._on_advanced_toggled)
-        self.show_advanced_check.set_margin_top(12)
         content.append(self.show_advanced_check)
 
         # Quick presets (in advanced section)
-        self.preset_label = Gtk.Label(label="Quick presets:")
+        self.preset_label = Gtk.Label(label="Quick Presets")
         self.preset_label.set_xalign(0)
+        self.preset_label.add_css_class("dim-label")
+        self.preset_label.set_margin_top(12)
+        self.preset_label.set_margin_bottom(6)
         self.preset_label.set_visible(False)
 
         self.preset_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
         self.preset_box.set_visible(False)
+        self.preset_box.set_homogeneous(True)
 
         presets = [
             ("Every minute", "* * * * *"),
@@ -147,6 +222,7 @@ class JobDialog(Gtk.Dialog):
 
         for name, expr in presets:
             btn = Gtk.Button(label=name)
+            btn.add_css_class("pill")
             btn.connect("clicked", lambda b, e=expr: self._set_preset(e))
             self.preset_box.append(btn)
 
@@ -154,14 +230,17 @@ class JobDialog(Gtk.Dialog):
         content.append(self.preset_box)
 
         # Manual cron expression (in advanced section)
-        self.manual_label = Gtk.Label(label="Manual cron expression:")
+        self.manual_label = Gtk.Label(label="Manual Cron Expression")
         self.manual_label.set_xalign(0)
-        self.manual_label.set_margin_top(6)
+        self.manual_label.add_css_class("dim-label")
+        self.manual_label.set_margin_top(12)
+        self.manual_label.set_margin_bottom(6)
         self.manual_label.set_visible(False)
 
         self.schedule_entry = Gtk.Entry()
         self.schedule_entry.set_placeholder_text("e.g., 0 */2 * * *")
         self.schedule_entry.set_visible(False)
+        self.schedule_entry.set_tooltip_text("Enter a custom cron expression")
         if job:
             self.schedule_entry.set_text(job["schedule"])
         self.schedule_entry.connect("changed", self._on_schedule_changed)
@@ -170,14 +249,16 @@ class JobDialog(Gtk.Dialog):
         content.append(self.schedule_entry)
 
         # Schedule builder grid (in advanced section)
-        self.builder_label = Gtk.Label(label="Advanced builder:")
+        self.builder_label = Gtk.Label(label="Advanced Builder")
         self.builder_label.set_xalign(0)
-        self.builder_label.set_margin_top(6)
+        self.builder_label.add_css_class("dim-label")
+        self.builder_label.set_margin_top(12)
+        self.builder_label.set_margin_bottom(6)
         self.builder_label.set_visible(False)
         content.append(self.builder_label)
 
         self.grid = Gtk.Grid()
-        self.grid.set_row_spacing(6)
+        self.grid.set_row_spacing(8)
         self.grid.set_column_spacing(12)
         self.grid.set_visible(False)
 
@@ -223,27 +304,36 @@ class JobDialog(Gtk.Dialog):
 
         content.append(self.grid)
 
-        # Validation message
+        # Separator before validation
+        separator3 = Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL)
+        separator3.set_margin_top(18)
+        separator3.set_margin_bottom(12)
+        content.append(separator3)
+
+        # Validation message with better styling
         self.validation_label = Gtk.Label()
         self.validation_label.set_xalign(0)
         self.validation_label.set_wrap(True)
-        self.validation_label.set_margin_top(12)
+        self.validation_label.set_margin_bottom(6)
         content.append(self.validation_label)
 
-        # Next runs preview
+        # Next runs preview with card-style background
         self.next_runs_label = Gtk.Label()
         self.next_runs_label.set_xalign(0)
         self.next_runs_label.set_wrap(True)
         self.next_runs_label.add_css_class("dim-label")
+        self.next_runs_label.set_margin_bottom(12)
         content.append(self.next_runs_label)
 
         # Comment entry
-        comment_label = Gtk.Label(label="Comment (optional):")
+        comment_label = Gtk.Label(label="Comment (Optional)")
         comment_label.set_xalign(0)
-        comment_label.set_margin_top(12)
+        comment_label.add_css_class("dim-label")
+        comment_label.set_margin_bottom(6)
 
         self.comment_entry = Gtk.Entry()
         self.comment_entry.set_placeholder_text("e.g., Daily backup job")
+        self.comment_entry.set_tooltip_text("Add a description for this cron job")
         if job:
             self.comment_entry.set_text(job.get("comment", ""))
 
