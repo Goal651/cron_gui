@@ -8,7 +8,7 @@ PROJECT_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
 cd "$PROJECT_ROOT"
 
 APP_NAME="cron-gui"
-VERSION="0.1.0"
+VERSION="0.2.0"
 ARCH="all"
 DEB_NAME="${APP_NAME}_${VERSION}_${ARCH}"
 BUILD_DIR="build_deb"
