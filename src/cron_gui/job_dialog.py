@@ -6,7 +6,7 @@ import gi
 import datetime
 
 gi.require_version("Gtk", "4.0")
-from gi.repository import Gtk, GLib
+from gi.repository import Gtk, GLib, Gio
 from typing import Optional, Dict
 from cron_gui.cron_parser import (
     validate_cron_expression,
@@ -48,16 +48,29 @@ class JobDialog(Gtk.Dialog):
         command_label.add_css_class("title-4")
         command_label.set_margin_bottom(6)
 
+        # Command entry with file chooser button
+        command_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+
         self.command_entry = Gtk.Entry()
         self.command_entry.set_placeholder_text("e.g., /usr/bin/backup.sh")
         self.command_entry.set_tooltip_text(
             "Enter the full path to the command or script to execute"
         )
+        self.command_entry.set_hexpand(True)  # Allow entry to expand
         if job:
             self.command_entry.set_text(job["command"])
 
+        # Browse button with icon
+        browse_button = Gtk.Button()
+        browse_button.set_icon_name("folder-open-symbolic")
+        browse_button.set_tooltip_text("Browse for a file or script")
+        browse_button.connect("clicked", self._on_browse_clicked)
+
+        command_box.append(self.command_entry)
+        command_box.append(browse_button)
+
         content.append(command_label)
-        content.append(self.command_entry)
+        content.append(command_box)
 
         # Separator
         separator1 = Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL)
@@ -357,6 +370,48 @@ class JobDialog(Gtk.Dialog):
         self.schedule_entry.set_text(expression)
         self._parse_schedule_to_builder(expression)
         self._sync_simple_from_expression(expression)
+
+    def _on_browse_clicked(self, button):
+        """Open file chooser dialog to select a command/script."""
+        # Create file chooser dialog
+        dialog = Gtk.FileDialog()
+        dialog.set_title("Select Command or Script")
+
+        # Create file filter for executables and scripts
+        filter_all = Gtk.FileFilter()
+        filter_all.set_name("All Files")
+        filter_all.add_pattern("*")
+
+        filter_scripts = Gtk.FileFilter()
+        filter_scripts.set_name("Scripts and Executables")
+        filter_scripts.add_pattern("*.sh")
+        filter_scripts.add_pattern("*.py")
+        filter_scripts.add_pattern("*.pl")
+        filter_scripts.add_pattern("*.rb")
+        filter_scripts.add_pattern("*.js")
+        filter_scripts.add_mime_type("application/x-executable")
+        filter_scripts.add_mime_type("application/x-shellscript")
+
+        # Create filter list
+        filters = Gio.ListStore.new(Gtk.FileFilter)
+        filters.append(filter_scripts)
+        filters.append(filter_all)
+        dialog.set_filters(filters)
+        dialog.set_default_filter(filter_scripts)
+
+        # Open dialog and handle response
+        dialog.open(self, None, self._on_file_selected)
+
+    def _on_file_selected(self, dialog, result):
+        """Handle file selection from the file chooser."""
+        try:
+            file = dialog.open_finish(result)
+            if file:
+                file_path = file.get_path()
+                self.command_entry.set_text(file_path)
+        except Exception as e:
+            # User cancelled or error occurred
+            pass
 
     def _parse_schedule_to_builder(self, schedule: str):
         """Parse schedule into builder fields and simple UI fields."""
