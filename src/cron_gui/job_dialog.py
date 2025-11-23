@@ -24,7 +24,7 @@ class JobDialog(Gtk.Dialog):
         )
 
         self.job = job
-        self.set_default_size(500, 450)
+        self.set_default_size(500, 500)
 
         # Add buttons
         self.add_button("Cancel", Gtk.ResponseType.CANCEL)
@@ -53,16 +53,26 @@ class JobDialog(Gtk.Dialog):
         content.append(self.command_entry)
 
         # ==== Simple scheduling UI ====
+        schedule_label = Gtk.Label(label="Schedule:")
+        schedule_label.set_xalign(0)
+        schedule_label.add_css_class("heading")
+        schedule_label.set_margin_top(12)
+        content.append(schedule_label)
+
         # Recurrence selector
+        recurrence_label = Gtk.Label(label="Recurrence:")
+        recurrence_label.set_xalign(0)
         self.recurrence_combo = Gtk.ComboBoxText()
-        for label in ["Once", "Daily", "Weekly", "Monthly", "Yearly"]:
+        for label in ["Daily", "Weekly", "Monthly", "Yearly", "Once"]:
             self.recurrence_combo.append_text(label)
-        self.recurrence_combo.set_active(0)  # default to Once
+        self.recurrence_combo.set_active(0)  # default to Daily
         self.recurrence_combo.connect("changed", self._on_simple_changed)
-        content.append(Gtk.Label(label="Recurrence:"))
+        content.append(recurrence_label)
         content.append(self.recurrence_combo)
 
-        # Time selection (hour/minute)
+        # Time selection (always visible)
+        time_label = Gtk.Label(label="Time:")
+        time_label.set_xalign(0)
         simple_time_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
         self.simple_hour_spin = Gtk.SpinButton.new_with_range(0, 23, 1)
         self.simple_minute_spin = Gtk.SpinButton.new_with_range(0, 59, 1)
@@ -70,74 +80,106 @@ class JobDialog(Gtk.Dialog):
         self.simple_minute_spin.set_value(0)
         self.simple_hour_spin.connect("value-changed", self._on_simple_changed)
         self.simple_minute_spin.connect("value-changed", self._on_simple_changed)
-        simple_time_box.append(Gtk.Label(label="Time:"))
         simple_time_box.append(self.simple_hour_spin)
         simple_time_box.append(Gtk.Label(label=":"))
         simple_time_box.append(self.simple_minute_spin)
+        content.append(time_label)
         content.append(simple_time_box)
 
-        # Calendar widget
+        # Day of week selector (for Weekly)
+        self.weekday_label = Gtk.Label(label="Day of week:")
+        self.weekday_label.set_xalign(0)
+        self.weekday_combo = Gtk.ComboBoxText()
+        weekdays = [
+            "Sunday",
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+        ]
+        for day in weekdays:
+            self.weekday_combo.append_text(day)
+        self.weekday_combo.set_active(0)  # default to Sunday
+        self.weekday_combo.connect("changed", self._on_simple_changed)
+        content.append(self.weekday_label)
+        content.append(self.weekday_combo)
+
+        # Day of month selector (for Monthly)
+        self.monthday_label = Gtk.Label(label="Day of month:")
+        self.monthday_label.set_xalign(0)
+        self.monthday_spin = Gtk.SpinButton.new_with_range(1, 31, 1)
+        self.monthday_spin.set_value(1)
+        self.monthday_spin.connect("value-changed", self._on_simple_changed)
+        content.append(self.monthday_label)
+        content.append(self.monthday_spin)
+
+        # Calendar widget (for Once and Yearly)
+        self.calendar_label = Gtk.Label(label="Date:")
+        self.calendar_label.set_xalign(0)
         self.calendar = Gtk.Calendar()
         self.calendar.connect("day-selected", self._on_simple_changed)
-        content.append(Gtk.Label(label="Date:"))
+        content.append(self.calendar_label)
         content.append(self.calendar)
 
-        # Schedule section
-        schedule_label = Gtk.Label(label="Schedule:")
-        schedule_label.set_xalign(0)
-        schedule_label.add_css_class("heading")
-        schedule_label.set_margin_top(12)
-        content.append(schedule_label)
+        # Advanced options section (hidden by default)
+        self.show_advanced_check = Gtk.CheckButton(label="Show advanced options")
+        self.show_advanced_check.connect("toggled", self._on_advanced_toggled)
+        self.show_advanced_check.set_margin_top(12)
+        content.append(self.show_advanced_check)
 
-        # Quick presets
-        preset_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        preset_label = Gtk.Label(label="Quick presets:")
-        preset_label.set_xalign(0)
+        # Quick presets (in advanced section)
+        self.preset_label = Gtk.Label(label="Quick presets:")
+        self.preset_label.set_xalign(0)
+        self.preset_label.set_visible(False)
+
+        self.preset_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        self.preset_box.set_visible(False)
 
         presets = [
             ("Every minute", "* * * * *"),
             ("Every hour", "0 * * * *"),
-            ("Daily at midnight", "0 0 * * *"),
-            ("Weekly (Sunday)", "0 0 * * 0"),
-            ("Monthly", "0 0 1 * *"),
+            ("Daily midnight", "0 0 * * *"),
+            ("Weekly Sun", "0 0 * * 0"),
+            ("Monthly 1st", "0 0 1 * *"),
         ]
 
         for name, expr in presets:
             btn = Gtk.Button(label=name)
             btn.connect("clicked", lambda b, e=expr: self._set_preset(e))
-            preset_box.append(btn)
+            self.preset_box.append(btn)
 
-        content.append(preset_label)
-        content.append(preset_box)
+        content.append(self.preset_label)
+        content.append(self.preset_box)
 
-        # Manual cron expression
-        manual_label = Gtk.Label(label="Or enter cron expression manually:")
-        manual_label.set_xalign(0)
-        manual_label.set_margin_top(12)
+        # Manual cron expression (in advanced section)
+        self.manual_label = Gtk.Label(label="Manual cron expression:")
+        self.manual_label.set_xalign(0)
+        self.manual_label.set_margin_top(6)
+        self.manual_label.set_visible(False)
 
         self.schedule_entry = Gtk.Entry()
-        self.schedule_entry.set_placeholder_text("e.g., 0 */2 * * * (every 2 hours)")
+        self.schedule_entry.set_placeholder_text("e.g., 0 */2 * * *")
+        self.schedule_entry.set_visible(False)
         if job:
             self.schedule_entry.set_text(job["schedule"])
         self.schedule_entry.connect("changed", self._on_schedule_changed)
 
-        content.append(manual_label)
+        content.append(self.manual_label)
         content.append(self.schedule_entry)
 
-        # Time Selection (This section seems to be replaced by the simple UI's time selection)
-        # The original time_box with specific_time_check is removed.
-
-        # Schedule builder grid
+        # Schedule builder grid (in advanced section)
         self.builder_label = Gtk.Label(label="Advanced builder:")
         self.builder_label.set_xalign(0)
-        self.builder_label.set_margin_top(12)
-        self.builder_label.set_visible(False)  # hidden by default
+        self.builder_label.set_margin_top(6)
+        self.builder_label.set_visible(False)
         content.append(self.builder_label)
 
         self.grid = Gtk.Grid()
         self.grid.set_row_spacing(6)
         self.grid.set_column_spacing(12)
-        self.grid.set_visible(False)  # hidden by default
+        self.grid.set_visible(False)
 
         # Minute
         self.grid.attach(Gtk.Label(label="Minute:", xalign=0), 0, 0, 1, 1)
@@ -181,11 +223,6 @@ class JobDialog(Gtk.Dialog):
 
         content.append(self.grid)
 
-        # Show advanced builder toggle
-        self.show_advanced_check = Gtk.CheckButton(label="Show advanced builder")
-        self.show_advanced_check.connect("toggled", self._on_advanced_toggled)
-        content.append(self.show_advanced_check)
-
         # Validation message
         self.validation_label = Gtk.Label()
         self.validation_label.set_xalign(0)
@@ -213,11 +250,17 @@ class JobDialog(Gtk.Dialog):
         content.append(comment_label)
         content.append(self.comment_entry)
 
+        # Initialize schedule entry with a default value
+        if not job:
+            self.schedule_entry.set_text("0 0 * * *")  # Daily at midnight
+
         # Initial validation
         if job:
             self._parse_schedule_to_builder(job["schedule"])
+
+        # Update UI visibility and validate
+        self._update_ui_visibility()
         self._validate_schedule()
-        self._on_simple_changed()  # Initialize simple UI and schedule entry
 
     def _set_preset(self, expression: str):
         """Set a preset cron expression."""
@@ -323,31 +366,62 @@ class JobDialog(Gtk.Dialog):
             self.next_runs_label.set_text("")
             return False
 
+    def _update_ui_visibility(self):
+        """Update visibility of UI elements based on recurrence type."""
+        recurrence_idx = self.recurrence_combo.get_active()
+        # 0=Daily, 1=Weekly, 2=Monthly, 3=Yearly, 4=Once
+
+        # Hide all optional elements first
+        self.weekday_label.set_visible(False)
+        self.weekday_combo.set_visible(False)
+        self.monthday_label.set_visible(False)
+        self.monthday_spin.set_visible(False)
+        self.calendar_label.set_visible(False)
+        self.calendar.set_visible(False)
+
+        # Show elements based on recurrence type
+        if recurrence_idx == 0:  # Daily - only time (already visible)
+            pass
+        elif recurrence_idx == 1:  # Weekly - time + day of week
+            self.weekday_label.set_visible(True)
+            self.weekday_combo.set_visible(True)
+        elif recurrence_idx == 2:  # Monthly - time + day of month
+            self.monthday_label.set_visible(True)
+            self.monthday_spin.set_visible(True)
+        elif recurrence_idx == 3:  # Yearly - time + calendar
+            self.calendar_label.set_visible(True)
+            self.calendar.set_visible(True)
+        elif recurrence_idx == 4:  # Once - time + calendar
+            self.calendar_label.set_visible(True)
+            self.calendar.set_visible(True)
+
     def _on_simple_changed(self, widget=None):
         """Handle changes in simple UI elements (recurrence, time, date)."""
+        # Update UI visibility first
+        self._update_ui_visibility()
+
         recurrence_idx = self.recurrence_combo.get_active()
         hour = int(self.simple_hour_spin.get_value())
         minute = int(self.simple_minute_spin.get_value())
 
-        # Get selected date from calendar
-        date = self.calendar.get_date()
-        day = date.get_day_of_month()
-        month = date.get_month() + 1  # Gtk.Calendar month is 0-indexed
-        year = date.get_year()
-
         # Build cron expression based on recurrence type
-        if recurrence_idx == 0:  # Once - specific date and time
-            expression = f"{minute} {hour} {day} {month} *"
-        elif recurrence_idx == 1:  # Daily
+        if recurrence_idx == 0:  # Daily
             expression = f"{minute} {hour} * * *"
-        elif recurrence_idx == 2:  # Weekly - use current day of week
-            weekday = datetime.date(year, month, day).weekday()
-            # Convert Python weekday (0=Mon) to cron weekday (0=Sun)
-            cron_weekday = (weekday + 1) % 7
-            expression = f"{minute} {hour} * * {cron_weekday}"
-        elif recurrence_idx == 3:  # Monthly - use selected day
+        elif recurrence_idx == 1:  # Weekly - use day of week selector
+            weekday_idx = self.weekday_combo.get_active()
+            expression = f"{minute} {hour} * * {weekday_idx}"
+        elif recurrence_idx == 2:  # Monthly - use day of month
+            day = int(self.monthday_spin.get_value())
             expression = f"{minute} {hour} {day} * *"
-        elif recurrence_idx == 4:  # Yearly - use selected day and month
+        elif recurrence_idx == 3:  # Yearly - use calendar
+            date = self.calendar.get_date()
+            day = date.get_day_of_month()
+            month = date.get_month() + 1  # Gtk.Calendar month is 0-indexed
+            expression = f"{minute} {hour} {day} {month} *"
+        elif recurrence_idx == 4:  # Once - use calendar (same as yearly for cron)
+            date = self.calendar.get_date()
+            day = date.get_day_of_month()
+            month = date.get_month() + 1  # Gtk.Calendar month is 0-indexed
             expression = f"{minute} {hour} {day} {month} *"
         else:
             expression = "* * * * *"
@@ -371,38 +445,50 @@ class JobDialog(Gtk.Dialog):
             if hour_part.isdigit():
                 self.simple_hour_spin.set_value(int(hour_part))
 
-            # Update calendar if day and month are numeric
-            if day_part.isdigit() and month_part.isdigit():
-                day = int(day_part)
-                month = int(month_part)
-                year = self.calendar.get_date().get_year()
-                try:
-                    # Gtk.Calendar month is 0-indexed
-                    self.calendar.select_month(month - 1, year)
-                    self.calendar.select_day(day)
-                except Exception:
-                    pass  # Invalid date
-
-            # Update recurrence combo based on pattern
+            # Update recurrence combo and related widgets based on pattern
+            # Order: 0=Daily, 1=Weekly, 2=Monthly, 3=Yearly, 4=Once
             if day_part == "*" and month_part == "*" and weekday_part == "*":
-                self.recurrence_combo.set_active(1)  # Daily
+                self.recurrence_combo.set_active(0)  # Daily
             elif day_part == "*" and month_part == "*" and weekday_part != "*":
-                self.recurrence_combo.set_active(2)  # Weekly
+                self.recurrence_combo.set_active(1)  # Weekly
+                if weekday_part.isdigit():
+                    self.weekday_combo.set_active(int(weekday_part))
             elif day_part != "*" and month_part == "*" and weekday_part == "*":
-                self.recurrence_combo.set_active(3)  # Monthly
+                self.recurrence_combo.set_active(2)  # Monthly
+                if day_part.isdigit():
+                    self.monthday_spin.set_value(int(day_part))
             elif day_part != "*" and month_part != "*":
-                self.recurrence_combo.set_active(4)  # Yearly
+                # Could be Yearly or Once - default to Yearly
+                self.recurrence_combo.set_active(3)  # Yearly
+                if day_part.isdigit() and month_part.isdigit():
+                    day = int(day_part)
+                    month = int(month_part)
+                    year = self.calendar.get_date().get_year()
+                    try:
+                        # Gtk.Calendar month is 0-indexed
+                        self.calendar.select_month(month - 1, year)
+                        self.calendar.select_day(day)
+                    except Exception:
+                        pass  # Invalid date
             else:
-                self.recurrence_combo.set_active(0)  # Once/Custom
+                self.recurrence_combo.set_active(0)  # Default to Daily
+
+            # Update UI visibility after setting recurrence
+            self._update_ui_visibility()
 
         except (ValueError, IndexError):
             pass  # Invalid expression format
 
     def _on_advanced_toggled(self, check_button):
-        """Toggle visibility of advanced builder."""
+        """Toggle visibility of advanced options."""
         show_advanced = check_button.get_active()
-        self.grid.set_visible(show_advanced)
+        # Show/hide all advanced elements
+        self.preset_label.set_visible(show_advanced)
+        self.preset_box.set_visible(show_advanced)
+        self.manual_label.set_visible(show_advanced)
+        self.schedule_entry.set_visible(show_advanced)
         self.builder_label.set_visible(show_advanced)
+        self.grid.set_visible(show_advanced)
 
     def get_job_data(self) -> Optional[Dict]:
         """
