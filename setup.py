@@ -10,7 +10,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="cron-gui",
-    version="0.1.0",
+    version="0.2.0",
     author="Cron GUI Team",
     description="A modern GTK4 desktop application for managing cron jobs on Linux",
     long_description=long_description,
